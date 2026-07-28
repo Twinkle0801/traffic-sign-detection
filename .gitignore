@@ -1,5 +1,8 @@
 venv/
 __pycache__/
 *.pyc
-data/
+data/*
+!data/traffic_sign_dataset
+data/traffic_sign_dataset/*
+!data/traffic_sign_dataset/data.yaml
 runs/
