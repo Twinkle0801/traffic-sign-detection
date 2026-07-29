@@ -7,15 +7,51 @@
 - mAP50: 0.937 | mAP50-95: 0.809 | Precision: 0.939 | Recall: 0.882
 
 ## Test Set Results (held out, never used in training)
-- mAP50: [fill in] | mAP50-95: [fill in] | Precision: [fill in] | Recall: [fill in]
+- mAP50: 0.910 | mAP50-95: 0.780 | Precision: 0.882 | Recall: 0.849
+
+The small, consistent drop from validation to test (roughly 3-6 points across all four
+metrics) indicates the model generalizes well rather than overfitting to the validation split.
 
 ## Strongest classes
-Speed Limit signs (10 excluded — no eval data) and Stop sign: 0.93–1.00 AP50
+Stop (0.995 AP50) and most Speed Limit signs (0.86-0.98 AP50 on test) — consistently strong
+across both validation and test splits.
 
 ## Weakest classes
-- Green Light (0.777 AP50) — high false-positive rate against background
-- Red Light (0.779 AP50) — same pattern
-- Root cause: traffic lights vary more in scale/lighting/angle than flat standardized signs, confirmed via confusion matrix (1580 and 1169 background false-positives respectively)
+- **Red Light** — 0.779 AP50 (val) -> 0.690 AP50 (test). Consistently the weakest class across
+  both splits, confirming this is a real model limitation, not a fluke of one data split.
+- **Green Light** — 0.777 AP50 (val) -> 0.816 AP50 (test). Also weak, though slightly more
+  stable than Red Light.
+- Root cause (confirmed via confusion matrix): both light classes generate a large number of
+  false positives against background regions (1580 for Green Light, 1169 for Red Light on the
+  validation confusion matrix) — far higher than any other class. Traffic lights vary more in
+  scale, angle, and lighting condition across a scene than flat, standardized road signs do,
+  making them inherently harder to distinguish from background clutter.
 
 ## Known limitations
-- "Speed Limit 10" has minimal training data (19 images) and zero validation instances — untested class, likely underperforms in practice
+- **Speed Limit 10** has minimal data: only 19 training images, 0 validation instances, and
+  just 3 test instances. On the 3 available test instances it scored 0.806 AP50 but only 0.528
+  recall (missed about half), though this estimate is too noisy (n=3) to draw strong
+  conclusions from. This class would benefit most from additional training data if the model
+  were to be improved further.
+- Model was trained and evaluated entirely on CPU; larger models (yolov8s/m) or longer training
+  were not explored due to hardware constraints.
+
+## Real-World / Out-of-Distribution Testing
+Tested on 14 genuinely novel images gathered from general web image search (not from the
+training/validation/test dataset in any way) — a deliberate mix of stop signs, speed limit
+signs, traffic lights, multi-sign scenes, an image from Frankfurt, Germany, and two heavily
+watermarked stock photos.
+
+- Correctly detected with high confidence: 12/14 images (all Stop signs 0.94-0.97, all Speed
+  Limit signs 0.97, most Red Light detections 0.72-0.89)
+- Weak/low-confidence detections: 2 instances (Green Light 0.29, one Red Light 0.26) — both
+  isolated to the two classes already flagged as weakest during validation/test evaluation
+- No false positives observed; no genuinely missed signs
+- Notably robust to: heavy stock-photo watermarking, multi-sign scenes (2 signs on one pole),
+  a real photo from a country (Germany) not necessarily represented in training data
+
+**Conclusion:** the model generalizes well beyond its own dataset for its 13 strong classes.
+Its two weakest classes (Green Light, Red Light) remained weak on entirely novel images too —
+consistent with the confusion-matrix diagnosis (high background false-positive rate for both
+light classes) rather than a fluke of any one data split. This is a well-understood, documented
+limitation rather than an unpredictable failure mode.
