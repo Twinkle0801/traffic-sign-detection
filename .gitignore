@@ -7,3 +7,5 @@ data/traffic_sign_dataset/*
 !data/traffic_sign_dataset/data.yaml
 runs/
 yolov8n.pt
+
+data/custom_test/
