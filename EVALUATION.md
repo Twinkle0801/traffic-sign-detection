@@ -55,3 +55,12 @@ Its two weakest classes (Green Light, Red Light) remained weak on entirely novel
 consistent with the confusion-matrix diagnosis (high background false-positive rate for both
 light classes) rather than a fluke of any one data split. This is a well-understood, documented
 limitation rather than an unpredictable failure mode.
+
+- Live webcam test with a printed multi-sign sheet: correctly detected Stop (0.96) and
+  Red Light (0.55, small/angled icon), correctly produced no detection for a Parking sign
+  (not a trained class - correct behavior). One misclassification: a "Speed Limit 50" sign
+  was labeled "Speed Limit 40" at only 0.30 confidence - close to the 0.25 threshold,
+  suggesting the model was genuinely uncertain rather than confidently wrong. Likely due to
+  visual similarity between "40" and "50" at small/angled scale rather than a systemic
+  confusion between these classes on the test-set numbers (both scored 0.964-0.970 AP50
+  individually).
