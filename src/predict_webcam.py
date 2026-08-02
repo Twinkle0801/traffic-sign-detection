@@ -12,3 +12,4 @@ results = model.predict(
 
 for r in results:
     pass  # the loop itself is what drives frame-by-frame processing and keeps the window open
+
