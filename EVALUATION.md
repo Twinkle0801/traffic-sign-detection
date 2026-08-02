@@ -95,8 +95,37 @@ A small experiment was run to test whether targeted fine-tuning could close this
 
 **Conclusion:** 4 images was not enough data for the model to robustly learn this new visual
 pattern. The experiment was safe (no harm to existing capability) but not sufficient to close
-the gap. A proper fix would require gathering and labeling 30-50+ varied examples ofa
+the gap. A proper fix would require gathering and labeling 30-50+ varied examples of
 vehicle-category signs across different numbers and icon types before attempting another
 fine-tune. This remains a documented, understood limitation rather than a silently broken
 capability. The fine-tuned checkpoint was not promoted to the main model (`models/best.pt`)
 given the inconclusive result; it exists only as an experimental artifact.
+
+### Second attempt (v2): synthetic data augmentation + replay buffer
+A more rigorous second attempt was made to address the first attempt's core weakness (too
+little data):
+- Generated 150 synthetic examples by programmatically overlaying vehicle-icon silhouettes
+  onto existing correctly-labeled Speed Limit signs, with an automated red-border color check
+  to filter out non-standard sign variants (RAPPEL panels, camera-zone signs) that would have
+  taught the wrong pattern
+- Combined with the 4 real images and a 300-image sample of original training data (a "replay
+  buffer" intended to prevent forgetting) into a 438-image fine-tuning set
+- Trained 20 epochs (early-stopped at epoch 11, best checkpoint from epoch 6) with a
+  moderately low learning rate (0.001)
+
+**Result: a real regression, not an improvement.**
+- Main test set: mAP50 dropped from 0.910 to 0.874 (-0.036), and critically, **recall dropped
+  from 0.849 to 0.724 (-0.125)** — the model became meaningfully worse at finding real signs
+  it used to detect correctly. Red Light recall alone fell from ~0.73 to 0.47.
+- Real-world spot check on the original failing image got worse, not better: the model now
+  hallucinates 6 detections (including 3 duplicate "Speed Limit 40" boxes) on an image that
+  only contains 2 real signs, versus the original 2-detection (both wrong) result.
+
+**Conclusion:** this checkpoint was **not promoted** — the original `models/best.pt` remains
+the production model. The 300-image replay buffer was likely insufficient relative to how much
+the new synthetic/real data skewed the 438-image training mix (~34% novel pattern), causing
+partial catastrophic forgetting. A genuine fix would require either substantially more real
+(non-synthetic) labeled examples, a smaller learning rate paired with a larger replay buffer,
+or both — beyond the practical scope of this project's CPU-only training setup. This remains
+a documented, well-understood limitation rather than a silently broken capability, backed by
+two independent, rigorous attempts and clear before/after evidence for each.
