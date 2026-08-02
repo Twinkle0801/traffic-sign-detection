@@ -160,7 +160,8 @@ See [`EVALUATION.md`](EVALUATION.md) for the complete analysis, including test-s
 
 ## License
 
-*(Add your preferred license here, e.g. MIT)*
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
